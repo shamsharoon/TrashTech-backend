@@ -1,0 +1,254 @@
+<!-- pwa/templates/pwa/home.html -->
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"/>
+    <title>Trash It - Capture and Analyze Trash</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'pwa/images/logo.ico' %}">
+  </head>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #8cc63f;
+    }
+
+    #captureContainer {
+      position: relative;
+      width: 80%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    #logoContainer {
+      position: absolute;
+      top: 40px;
+      left: 20px;
+    }
+
+    #logoContainer h4 {
+      color: white;
+      font-size: 5em;
+      font-weight: 900;
+      margin: 0;
+    }
+
+    #logo {
+      width: 15em;
+      height: auto;
+    }
+
+    #video {
+      width: 100%;
+      height: auto;
+      max-height: 300px;
+      object-fit: cover;
+    }
+
+    #buttonContainer {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .btn {
+      display: block;
+      margin: 20px auto;
+      color: #8cc63f;
+      padding: 15px 45px;
+      border-radius: 5px;
+      cursor: pointer;
+      border: 2px solid white;
+      transition: background-color 0.3s;
+      font-weight: 900;
+    }
+
+    .btn:hover {
+      background-color: #8cc63f;
+      border: 2px solid white;
+      color: white;
+    }
+
+    #resultBox {
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 15px;
+    }
+
+    .resultText {
+      text-align: center;
+      font-size: 2em;
+      font-weight: 900;
+      color: white;
+    }
+
+    .resultText,
+    p {
+      margin: 0;
+    }
+
+    #banner {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      background-color: white;
+      color: #8cc63f;
+      padding: 10px 20px;
+      border-radius: 15px;
+      font-weight: 900;
+    }
+
+    @media screen and (max-width: 425px) {
+      #buttonContainer {
+        flex-direction: column;
+      }
+      .btn {
+        width: 100%;
+        margin: 10px auto;
+      }
+    }
+  </style>
+  <body>
+    <div id="banner">
+      <p class="bannerText">Trash It: Snap, Sort, Save the Planet! 🌿</p>
+    </div>
+    <div id="captureContainer">
+      {% csrf_token %}
+      <div id="resultBox">
+        <p id="result" class="resultText"></p>
+      </div>
+      <video id="video" autoplay muted playsinline></video>
+      <button id="captureButton" class="btn">Take Picture</button>
+      <canvas id="capturedCanvas" style="display: none"></canvas>
+      <div id="buttonContainer">
+        <button id="freezeButton" class="btn" style="display: none">
+          Analyze Picture
+        </button>
+        <button id="resetButton" class="btn" style="display: none">
+          Reset Picture
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Get DOM elements
+      const captureButton = document.getElementById('captureButton');
+      const video = document.getElementById('video');
+      const freezeButton = document.getElementById('freezeButton');
+      const capturedCanvas = document.getElementById('capturedCanvas');
+      const capturedContext = capturedCanvas.getContext('2d');
+      const resetButton = document.getElementById('resetButton');
+      const resultText = document.getElementById('result');
+      const resultBox = document.getElementById('resultBox');
+
+      let stream;
+
+      // Event listener for the "Take Picture" button
+      captureButton.addEventListener('click', async () => {
+        try {
+          // Access the device camera
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' },
+          });
+
+          // Set the camera feed as the source for the video element
+          video.srcObject = stream;
+
+          // Display other buttons and hide the capture button
+          freezeButton.style.display = 'block';
+          resetButton.style.display = 'block';
+          captureButton.style.display = 'none';
+        } catch (error) {
+          console.error('Error accessing camera:', error);
+        }
+      });
+
+      // Event listener for the "Analyze Picture" button
+      freezeButton.addEventListener('click', async () => {
+        // Set the canvas dimensions to match the video feed
+        capturedCanvas.width = video.videoWidth;
+        capturedCanvas.height = video.videoHeight;
+
+        // Draw the video feed onto the canvas
+        capturedContext.drawImage(
+          video,
+          0,
+          0,
+          capturedCanvas.width,
+          capturedCanvas.height
+        );
+
+        // Display the captured image and hide the video feed
+        video.style.display = 'none';
+        capturedCanvas.style.display = 'block';
+        capturedCanvas.style.width = '100%';
+
+        // Stop the video stream
+        if (stream) {
+          const tracks = stream.getTracks();
+          tracks.forEach((track) => track.stop());
+        }
+
+        // Convert the captured image to base64-encoded JPEG format
+        const imageData = capturedCanvas.toDataURL('image/jpeg');
+
+        // Get the CSRF token from the form
+        var csrfToken = $('[name=csrfmiddlewaretoken]').val();
+
+        try {
+          // Send the captured image data to the server for analysis
+          const response = await fetch('/analyze_picture/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({ image_data: imageData }),
+          });
+
+          // Parse the response as JSON
+          const data = await response.json();
+
+          // Display the analysis result on the same page
+          if (data.result) {
+            resultText.innerHTML = 'This item is recyclable!';
+            resultBox.style.border = '3px solid green';
+          } else {
+            resultText.innerHTML = 'This item is not recyclable.';
+            resultBox.style.border = '3px solid red';
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+
+      // Event listener for the "Reset Picture" button
+      resetButton.addEventListener('click', () => {
+        // Reset the state and allow capturing another picture
+        video.style.display = 'block';
+        capturedCanvas.style.display = 'none';
+        freezeButton.style.display = 'block';
+        resetButton.style.display = 'block';
+        resultText.innerHTML = '';
+        resultBox.style.border = 'none';
+
+        // Stop the video stream
+        if (stream) {
+          const tracks = stream.getTracks();
+          tracks.forEach((track) => track.stop());
+        }
+      });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+# Navigate to your project directory
+
+# Create a virtual environment
+python -m venv venv
+
+# Activate the virtual environment
+.\venv\Scripts\Activate
+
+# Install all dependencies from requirements.txt
+pip install -r requirements.txt
+
+# Run the development server
+python manage.py runserver
