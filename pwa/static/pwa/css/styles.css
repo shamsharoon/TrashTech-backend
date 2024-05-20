@@ -1,0 +1,106 @@
+    body {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #8cc63f;
+    }
+
+    #captureContainer {
+      position: relative;
+      width: 80%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    #logoContainer {
+      position: absolute;
+      top: 40px;
+      left: 20px;
+    }
+
+    #logoContainer h4 {
+      color: white;
+      font-size: 5em;
+      font-weight: 900;
+      margin: 0;
+    }
+
+    #logo {
+      width: 15em;
+      height: auto;
+    }
+
+    #video {
+      width: 100%;
+      height: auto;
+      max-height: 300px;
+      object-fit: cover;
+    }
+
+    #buttonContainer {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .btn {
+      display: block;
+      margin: 20px auto;
+      color: #8cc63f;
+      padding: 15px 45px;
+      border-radius: 5px;
+      cursor: pointer;
+      border: 2px solid white;
+      transition: background-color 0.3s;
+      font-weight: 900;
+    }
+
+    .btn:hover {
+      background-color: #8cc63f;
+      border: 2px solid white;
+      color: white;
+    }
+
+    #resultBox {
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 15px;
+    }
+
+    .resultText {
+      text-align: center;
+      font-size: 2em;
+      font-weight: 900;
+      color: white;
+    }
+
+    .resultText,
+    p {
+      margin: 0;
+    }
+
+    #banner {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      background-color: white;
+      color: #8cc63f;
+      padding: 10px 20px;
+      border-radius: 15px;
+      font-weight: 900;
+    }
+
+    @media screen and (max-width: 425px) {
+      #buttonContainer {
+        flex-direction: column;
+      }
+      .btn {
+        width: 100%;
+        margin: 10px auto;
+      }
+    }
