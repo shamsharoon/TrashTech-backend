@@ -82,21 +82,26 @@
           resultContainer.innerHTML = result
             ? 'This item is recyclable!'
             : 'This item is not recyclable.';
-          resultContainer.style.color = result ? 'green' : 'red';
+          resultContainer.style.border = result ? '3px solid green' : '3px solid red';
         } catch (error) {
           console.error('Error analyzing picture:', error);
         }
       });
 
-      resetButton.addEventListener('click', () => {
-        video.style.display = 'block';
-        capturedCanvas.style.display = 'none';
-        freezeButton.style.display = 'block';
-        resetButton.style.display = 'block';
+      resetButton.addEventListener('click', async () => {
+        try {
+          video.style.display = 'block';
+          capturedCanvas.style.display = 'none';
+          resultContainer.innerHTML = '';
+          resultContainer.style.border = 'none';
+          freezeButton.style.display = 'block';
+          resetButton.style.display = 'block';
+          captureButton.style.display = 'none';
 
-        if (stream) {
-          const tracks = stream.getTracks();
-          tracks.forEach(track => track.stop());
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+        } catch (error) {
+          console.error('Error accessing camera:', error);
         }
       });
     </script>
